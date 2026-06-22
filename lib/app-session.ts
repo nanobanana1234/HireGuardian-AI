@@ -118,12 +118,14 @@ function hashInput(value: string) {
 }
 
 function appSecret() {
-  return (
-    process.env.HIREGUARDIAN_SESSION_SECRET ||
-    process.env.T3N_API_KEY ||
-    process.env.OPENAI_API_KEY ||
-    "hireguardian-development-secret"
-  )
+  const secret = process.env.HIREGUARDIAN_SESSION_SECRET
+  if (secret) return secret
+
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
+    throw new Error("HIREGUARDIAN_SESSION_SECRET is required in production.")
+  }
+
+  return "hireguardian-development-secret"
 }
 
 function randomId(bytes: number) {

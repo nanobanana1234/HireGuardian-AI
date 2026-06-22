@@ -17,7 +17,7 @@ type Terminal3Usage = {
 export type Terminal3Status = {
   configured: boolean
   connected: boolean
-  mode: "live-sdk" | "local-sdk-proof" | "not-configured" | "sdk-error"
+  mode: "live-sdk" | "not-configured" | "sdk-error"
   environment: "testnet" | "production"
   nodeUrl?: string
   did?: string
@@ -297,6 +297,10 @@ function normalizeEnvironment(value: string | undefined): "testnet" | "productio
 
 function hexToBytes(value: string) {
   const hex = value.startsWith("0x") ? value.slice(2) : value
+  if (!/^[a-fA-F0-9]{64}$/.test(hex)) {
+    throw new Error("Terminal3 API key must be a 32-byte hex private key.")
+  }
+
   return new Uint8Array(Buffer.from(hex, "hex"))
 }
 

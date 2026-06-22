@@ -18,6 +18,9 @@ export async function GET(request: Request) {
       openai: {
         configured: Boolean(process.env.OPENAI_API_KEY),
       },
+      session: {
+        configured: Boolean(process.env.HIREGUARDIAN_SESSION_SECRET),
+      },
       terminal3: {
         configured: Boolean(process.env.T3N_API_KEY),
         connected: terminal3?.connected,

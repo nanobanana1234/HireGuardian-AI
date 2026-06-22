@@ -56,6 +56,7 @@ Security details:
 - No fabricated proof fallback is used for protected actions.
 - DID, signatures, and provider errors are masked before they reach the UI.
 - High-trust approval tokens expire, are session-bound, action-bound, and input-bound.
+- Production app sessions require `HIREGUARDIAN_SESSION_SECRET`; the app no longer falls back to provider API keys for session signing.
 
 ## Pages
 
@@ -74,7 +75,7 @@ Security details:
 ## API Routes
 
 - `GET /api/session` - creates or returns the signed app session and CSRF token
-- `GET /api/health?deep=1` - checks OpenAI, Terminal3, MongoDB, and Cloudinary configuration
+- `GET /api/health?deep=1` - checks session signing, OpenAI, Terminal3, MongoDB, and Cloudinary configuration
 - `GET /api/t3/status` - returns masked Terminal3 SDK connection status
 - `POST /api/agent/run` - runs a protected agent action
 - `GET /api/audit` - returns current-session audit events
@@ -158,7 +159,7 @@ Completed before final deployment:
 - `npm run lint`
 - `npm run build`
 - `npm audit --omit=dev --json` with 0 vulnerabilities
-- Local `GET /api/health?deep=1`
+- Local `GET /api/health?deep=1` confirms session signing secret and Terminal3 `live-sdk`
 - Local CSRF denial for missing token
 - Local memory save/load
 - Local application tracker save/load
@@ -172,5 +173,6 @@ Completed before final deployment:
 - Playwright console check with 0 relevant app warnings or errors
 - Production deployment aliased to `https://hireguardian-ai.vercel.app`
 - Production `GET /api/health?deep=1` confirms OpenAI configured, Terminal3 `live-sdk`, and MongoDB connected
+- Terminal3 credential rotation verified with masked DID `did:t3n:44...bbd4af`
 - Production approval flow signs with Terminal3 `live-sdk`
 - Production UI smoke confirms `T3 live`, `Live SDK`, no framework overlay, no horizontal overflow, and 0 relevant console logs

@@ -305,13 +305,24 @@ void main() {
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     let isDocumentHidden = document.hidden
+    let isContextLost = false
     const handleVisibility = () => {
       isDocumentHidden = document.hidden
     }
+    const handleContextLost = (event: Event) => {
+      event.preventDefault()
+      isContextLost = true
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
+
     document.addEventListener("visibilitychange", handleVisibility, { passive: true })
+    canvas.addEventListener("webglcontextlost", handleContextLost, false)
 
     const renderOnce = () => {
-      if (!paused && programRef.current && meshRef.current) {
+      if (!paused && !isContextLost && programRef.current && meshRef.current) {
         renderer.render({ scene: meshRef.current })
       }
     }
@@ -322,11 +333,15 @@ void main() {
 
       lastTimeRef.current = t
 
-      if (!paused && !isDocumentHidden && programRef.current && meshRef.current) {
+      if (!paused && !isDocumentHidden && !isContextLost && programRef.current && meshRef.current) {
         try {
           renderer.render({ scene: meshRef.current })
-        } catch (e) {
-          console.error(e)
+        } catch {
+          isContextLost = true
+          if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current)
+            rafRef.current = null
+          }
         }
       }
     }
@@ -340,6 +355,7 @@ void main() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       document.removeEventListener("visibilitychange", handleVisibility)
+      canvas.removeEventListener("webglcontextlost", handleContextLost)
       ro.disconnect()
 
       const callIfFn = <T extends object, K extends keyof T>(obj: T | null, key: K) => {

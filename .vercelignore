@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+.tmp/
+*.log
+node_modules/
+.next/
+dist/
+build/

@@ -206,9 +206,9 @@ async function buildTerminal3Proof(actionId: ActionId, inputSummary: string): Pr
     throw new Error(liveStatus.error || "Terminal3 live SDK authentication is required before signing.")
   }
 
-  const tenantKeyBytes = hexToBytes(apiKey)
+  const tenantKeyBytes = privateKeyToBytes(apiKey)
   const agentPrivateKey = deriveAgentPrivateKey(apiKey, agent.id)
-  const agentKeyBytes = hexToBytes(agentPrivateKey)
+  const agentKeyBytes = privateKeyToBytes(agentPrivateKey)
   const agentSigningKey = new SigningKey(agentPrivateKey)
   const agentPubkey = hexToBytes(agentSigningKey.compressedPublicKey)
   const vcId = randomBytes(sdk.VC_ID_LEN)
@@ -296,8 +296,17 @@ function normalizeEnvironment(value: string | undefined): "testnet" | "productio
 }
 
 function hexToBytes(value: string) {
-  const hex = normalizePrivateKey(value).slice(2)
+  const trimmed = value.trim()
+  const hex = trimmed.startsWith("0x") ? trimmed.slice(2) : trimmed
+  if (!/^[a-fA-F0-9]+$/.test(hex) || hex.length % 2 !== 0) {
+    throw new Error("Expected a valid hex value.")
+  }
+
   return new Uint8Array(Buffer.from(hex, "hex"))
+}
+
+function privateKeyToBytes(value: string) {
+  return hexToBytes(normalizePrivateKey(value))
 }
 
 function normalizePrivateKey(value: string) {

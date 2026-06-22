@@ -73,7 +73,7 @@ export async function getTerminal3Status(force = false): Promise<Terminal3Status
     return cachedStatus.value
   }
 
-  const apiKey = process.env.T3N_API_KEY
+  const apiKey = process.env.T3N_API_KEY?.trim()
   const expectedDid = process.env.T3N_DID
   const environment = normalizeEnvironment(process.env.T3N_ENVIRONMENT)
   const sdkPackage = "@terminal3/t3n-sdk"
@@ -197,7 +197,7 @@ async function buildTerminal3Proof(actionId: ActionId, inputSummary: string): Pr
   const agent = agents.find((item) => item.id === action.agentId)!
   const liveStatus = await getTerminal3Status()
   const sdk = await import("@terminal3/t3n-sdk")
-  const apiKey = process.env.T3N_API_KEY
+  const apiKey = process.env.T3N_API_KEY?.trim()
 
   if (!apiKey) {
     throw new Error("T3N_API_KEY is required to create a Terminal3 proof.")
@@ -296,16 +296,22 @@ function normalizeEnvironment(value: string | undefined): "testnet" | "productio
 }
 
 function hexToBytes(value: string) {
-  const hex = value.startsWith("0x") ? value.slice(2) : value
+  const hex = normalizePrivateKey(value).slice(2)
+  return new Uint8Array(Buffer.from(hex, "hex"))
+}
+
+function normalizePrivateKey(value: string) {
+  const trimmed = value.trim()
+  const hex = trimmed.startsWith("0x") ? trimmed.slice(2) : trimmed
   if (!/^[a-fA-F0-9]{64}$/.test(hex)) {
     throw new Error("Terminal3 API key must be a 32-byte hex private key.")
   }
 
-  return new Uint8Array(Buffer.from(hex, "hex"))
+  return `0x${hex}`
 }
 
 function deriveAgentPrivateKey(apiKey: string, agentId: string) {
-  return `0x${createHmac("sha256", apiKey).update(`hireguardian:${agentId}`).digest("hex")}`
+  return `0x${createHmac("sha256", normalizePrivateKey(apiKey)).update(`hireguardian:${agentId}`).digest("hex")}`
 }
 
 function stableJson(value: unknown): string {
